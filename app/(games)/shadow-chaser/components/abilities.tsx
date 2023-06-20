@@ -10,8 +10,8 @@ const Abilities = () => {
 
     return (
         <>
-            <Ability name={'dexterity'} />
             <Ability name={'perception'} />
+            <Ability name={'dexterity'} />
             <Ability name={'constitution'} />
             <Ability name={'skill'} />
         </>

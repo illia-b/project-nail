@@ -3,6 +3,64 @@
 import React, { createContext, useContext } from 'react';
 import { useImmerReducer } from 'use-immer';
 
+export interface Item {
+    name: string
+    aliases?: string[]
+    armorDefense?: number
+    protectFromShadows?: boolean
+    weaponScorePenalty?: number
+    meleeWeapon?: boolean
+    rangedWeapon?: boolean
+    shadowWeapon?: boolean
+}
+
+const items: Item[] = [
+    { name: 'ARROW', aliases: ['ARROWS'] },
+    { name: 'BOW', rangedWeapon: true },
+    { name: 'HATCHET', meleeWeapon: true, weaponScorePenalty: 1 },
+    { name: 'FLYNT', meleeWeapon: true, aliases: ['SWORD'] },
+    { name: 'LOCKET' },
+    { name: 'SHADOW BLADE', meleeWeapon: true, shadowWeapon: true },
+    { name: 'FIRECRACKERS', aliases: ['FIRECRACKER', 'FIRE CRACKERS', 'FIRE CRACKER'] },
+    { name: 'YELLOW POUCH', aliases: ['POUCH'] },
+    { name: 'ROPE WITH HOOK', aliases: ['ROPE AND HOOK'] },
+    { name: 'SILVER BRACELET', aliases: ['BRACELET'] },
+    { name: 'CHAINMAIL VEST', aliases: ['CHAINMAIL'], armorDefense: 1, protectFromShadows: true },
+    { name: 'SILVER RING' },
+    { name: 'GOLD RING' },
+    { name: 'HOODED CLOAK', aliases: ['CLOAK'] },
+    { name: 'SILVER DAGGER', aliases: ['DAGGER'], meleeWeapon: true, weaponScorePenalty: 1 },
+    { name: 'WHITE FLOWER', aliases: ['FLOWER'] },
+    { name: 'MAGNIFYING GLASS', aliases: ['GLASS', 'LOOKING GLASS'] },
+    { name: "CITY GUARD'S BADGE", aliases: ['BADGE'] },
+    { name: 'HANDCUFFS', aliases: ['CUFFS', 'HAND CUFFS'] },
+    { name: 'BLUE STONE', aliases: ['BLUESTONE'] },
+    { name: 'SLEEPING POTION', aliases: ['SLEEP POTION'] },
+    { name: 'FUEL' },
+    { name: 'LANTERN' },
+    { name: 'COMPASS' },
+    { name: 'CHALK' },
+    { name: 'CALTROPS' },
+    { name: 'LEATHER ARMOUR', aliases: ['LEATHER', 'LEATHER ARMOR'], armorDefense: 1, protectFromShadows: false },
+    { name: 'BOOK OF FAIRY TALES', aliases: ['BOOK', 'FAIRY TALES', 'FAIRYTALES'] },
+    { name: 'NET'},
+    { name: 'RED CHAIN' },
+    { name: 'MIRROR' }
+]
+
+const itemMap: { [name: string]: Item } = {}
+
+const fillItemMap = () => {
+    if (Object.keys(itemMap).length > 0) return
+    items.forEach(item => {
+        itemMap[item.name] = item
+        if (item.aliases) {
+            item.aliases.forEach(alias => {
+                itemMap[alias] = item
+            })
+        }
+    }
+}    
 
 export interface FightState {
     enemies: {
@@ -89,6 +147,28 @@ const checkFightOver = (state) => {
     }
 }
 
+const checkRangedFightOver = (state) => {
+
+    let won = true;
+    for (let enemy of state.fight.enemies) {
+        if (enemy.health > 0) {
+            won = false;
+        }
+    }
+    if (won) {
+        state.fight.inFight = false
+        state.messages.unshift('You won the fight')
+    }
+
+    let arrows = state.inventory['ARROW'] || 0
+
+    if (arrows <= 0) {
+        state.fight.inFight = false
+        state.messages.unshift('No arrows left. You lost the fight')
+        state.fight.enemies.length = 0
+    }
+}
+
 const checkGameOver = (state) => {
     if (state.health <= 0) {
         state.lost = true
@@ -136,10 +216,16 @@ const _playerStateActions = {
         state.abilities[action.ability] += action.delta
     },
     'INVENTORY_PUT_ITEM': (state, action) => {
-        if (!state.inventory[action.item]) {
-            state.inventory[action.item] = 0
+        let name = action.item
+        if (!itemMap[name]) {
+            state.messages.unshift(`Cannot put ${name} in inventory, unknown item`)
+            return;
         }
-        state.inventory[action.item] += action.delta || 1
+        let item = itemMap[name]
+        if (!state.inventory[item.name]) {
+            state.inventory[item.name] = 0
+        }
+        state.inventory[item.name] += action.delta || 1
     },
     'INVENTORY_REMOVE_ITEM': (state, action) => {
         let itemAmount = state.inventory[action.item] || 0
@@ -166,10 +252,17 @@ const _playerStateActions = {
         state.messages.unshift(message)
     },
 
-    'FIGHT_PREPARE': (state, action) => {
+    'FIGHT_PREPARE_RANGED': (state, action) => {
         state.fight.prepare = true
         state.fight.inFight = true
-        state.messages.unshift('Prepare for fight')
+        state.fight.ranged = true
+        state.messages.unshift('Prepare for ranged fight')
+    },
+    'FIGHT_PREPARE_MELEE': (state, action) => {
+        state.fight.prepare = true
+        state.fight.inFight = true
+        state.fight.ranged = false
+        state.messages.unshift('Prepare for melee fight')
     },
     'FIGHT_START': (state, action) => {
         state.fight.prepare = false
@@ -190,7 +283,8 @@ const _playerStateActions = {
         let enemy = state.fight.enemies[action.enemyIndex]
 
         let minScore = 6 + action.damage - state.fight.weapon.scorePenalty
-        let score = Math.floor(Math.random() * 12) + 1
+        let score = Math.floor(Math.random() * 6) + 1
+        score += Math.floor(Math.random() * 6) + 1
 
         let message = `Melee attack on ${enemy.name} with score ${score} vs ${minScore} :`
         if (score >= minScore) {
@@ -198,8 +292,14 @@ const _playerStateActions = {
             enemy.health -= action.damage
         } else {
             message += ' miss'
-            state.health -= enemy.damage
-            message += ` and you are hit for ${enemy.damage} damage`
+            let aliveEnemyDamageTotal = 0
+            for (let enemy of state.fight.enemies) {
+                if (enemy.health > 0) {
+                    aliveEnemyDamageTotal += enemy.damage - state.fight.armor.defense
+                }
+            }
+            state.health -= aliveEnemyDamageTotal
+            message += ` and you are hit for ${aliveEnemyDamageTotal} damage`
         }
         enemy.rounds -= 1
 
@@ -207,8 +307,39 @@ const _playerStateActions = {
 
         checkFightOver(state)
         checkGameOver(state)
-    }
+    },
+    'RANGED_ATTACK': (state, action) => {
+        let enemy = state.fight.enemies[action.enemyIndex]
+        
+        let score = Math.floor(Math.random() * 6) + 1
+        let message = `Ranged attack on ${enemy.name} with score ${score} : `
+        if (state.abilities.skill >= 5) {
+            score += 1
+        }
 
+        let damage = 0
+        if (score >= 6) {
+            damage = 2
+            message += 'Critical hit! Enemy is dead.'
+            enemy.health = 0
+        } else if (score >= 4) {
+            damage = 1
+            message += 'Hit!. '
+            enemy.health -= 1
+            if (enemy.health > 0) {
+                message += `Enemy is wounded.`
+            } else {
+                message += `Enemy is dead.`
+            }
+        } else {
+            message += 'Miss.'
+        }
+
+        state.messages.unshift(message)
+        state.inventory['ARROW'] -= 1        
+
+        checkRangedFightOver(state)
+    }
 }
 
 export const changeHealth = (delta: number) => {
@@ -263,9 +394,9 @@ export const throwDice = (dice: number) => {
     }
 }
 
-export const prepareFight = () => {
+export const prepareFight = (ranged = false) => {
     return {
-        type: 'FIGHT_PREPARE'
+        type: ranged ? 'FIGHT_PREPARE_RANGED' : 'FIGHT_PREPARE_MELEE'
     }
 }
 
@@ -275,7 +406,7 @@ export const startFight = () => {
     }
 }
 
-export const addEnemy = (name: string, health: number, damage: number, rounds: number) => {
+export const addEnemy = (name: string, health = 2, damage = 0, rounds = 0) => {
     return {
         type: 'ENEMY_ADD',
         name: name,
@@ -300,6 +431,12 @@ export const meleeAttack = (index: number, damage: number) => {
     }
 }
 
+export const rangedAttack = (index: number) => {
+    return {
+        type: 'RANGED_ATTACK',
+        enemyIndex: index
+    }
+}
 
 const playerStateReducer = (state, action) => {
     _playerStateActions[action.type](state, action);
