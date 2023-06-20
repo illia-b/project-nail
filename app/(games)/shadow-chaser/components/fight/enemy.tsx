@@ -26,19 +26,6 @@ const Enemy = ({index}) => {
         meleeAttack(enemyIndex, 5)
     }
 
-    let attackOptions = (<>
-    {state.ranged ? 
-        <span>
-        </span>
-        :
-        <div className="flex w-80 justify-between">
-            <Button onClick={() => simpleAttack(index)}>1 DP Attack</Button>
-            <Button onClick={() => strongAttack(index)}>3 DP Attack</Button>
-            <Button onClick={() => superAttack(index)}>5 DP Attack</Button>
-        </div>
-    }
-    </>)
-
     return (
         <>
             <div className="flex w-80 justify-between">
@@ -47,7 +34,11 @@ const Enemy = ({index}) => {
                 {state.fight.prepare && <button onClick={() => dispatch(removeEnemy(index))}>❌</button>}
             </div>
             {state.fight.inFight && !state.fight.prepare && <div className="flex w-full justify-between">
-                {attackOptions}
+                <div className="flex w-80 justify-between">
+                    <Button onClick={() => simpleAttack(index)}>1 DP Attack</Button>
+                    <Button onClick={() => strongAttack(index)}>3 DP Attack</Button>
+                    <Button onClick={() => superAttack(index)}>5 DP Attack</Button>
+                </div>
             </div>}
         </>
     )

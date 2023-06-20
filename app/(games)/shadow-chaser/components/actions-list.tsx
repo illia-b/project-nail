@@ -21,8 +21,7 @@ const ActionsList = () => {
                 <Button disabled={state.health <= 0} className='bg-red-500' onClick={() => dispatch(changeHealth(-4))}>4💔</Button>
                 <Button disabled={state.health <= 0} className='bg-red-500' onClick={() => dispatch(changeHealth(-5))}>5💔</Button>
                 <br/>
-                <Button onClick={() => dispatch(setHealth(12))}>Heal to Full ❤</Button>
-                <br/>
+                <Button className='text-4xl pb-2 pt-1 mr-4 rounded-lg' onClick={() => dispatch(setHealth(12))}>Full ❤</Button>
                 <Button className='text-4xl pb-2 pt-1 mr-4 rounded-lg' onClick={() => dispatch(throwDice(1))}>🎲</Button>
                 <Button className='text-4xl pb-2 pt-1 rounded-lg' onClick={() => dispatch(throwDice(2))}>🎲🎲</Button>
 

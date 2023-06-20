@@ -48,8 +48,14 @@ const AddEnemy = () => {
     let roundBar = makeSelectBar("⏳", maxRounds, rounds, setRounds)
     let damageBar = makeSelectBar("🗡", maxDamage, damage, setDamage)
 
+    const ranged = state.fight.ranged
+
     const confirmEnemy = () => {
-        dispatch(addEnemy(enemyInputRef.current.value.toUpperCase(), health, damage, rounds))
+        if (ranged) {
+            dispatch(addEnemy(enemyInputRef.current.value.toUpperCase()))
+        } else {
+            dispatch(addEnemy(enemyInputRef.current.value.toUpperCase(), health, damage, rounds))
+        }
         enemyInputRef.current.value = ""
     }
 
@@ -62,18 +68,18 @@ const AddEnemy = () => {
                 ref={enemyInputRef} type="text" placeholder="Name"/>            
             <Button onClick={confirmEnemy}>➕</Button>
         </div>
-        <div>
+        {!ranged && <div>
             <span className="inline-block w-20">Health: </span>
             {healthBar}
-        </div>
-        <div>
+        </div>}
+        {!ranged && <div>
             <span className="inline-block w-20">Rounds: </span>
             {roundBar}
-        </div>
-        <div>
+        </div>}
+        {!ranged && <div>
             <span className="inline-block w-20">Damage: </span>
             {damageBar}
-        </div>
+        </div>}
         </>
     )
 }
