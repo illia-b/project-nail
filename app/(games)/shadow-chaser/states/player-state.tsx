@@ -59,8 +59,9 @@ const fillItemMap = () => {
                 itemMap[alias] = item
             })
         }
-    }
-}    
+    })
+}
+fillItemMap()
 
 export interface FightState {
     enemies: {
