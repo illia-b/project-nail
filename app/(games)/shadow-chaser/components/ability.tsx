@@ -19,14 +19,7 @@ const Ability = ({name}) => {
                 <span className="inline-block">{labels[name]}: </span>
                 <div className="w-1/3 flex justify-between">
                     <Button disabled={state.abilities[name] == 0} onClick={() => dispatch(changeAbility(name, -1))}>➖</Button> 
-                    <span className="
-                        inline-block
-                        w-12
-                        text-center
-                        border-2
-                        border-gray-400
-                        rounded-md
-                    ">{state.abilities[name]}</span>
+                    <span className="inline-block w-12 text-center border-2 border-gray-400 rounded-md">{state.abilities[name]}</span>
                     <Button onClick={() => dispatch(changeAbility(name, 1))}>➕</Button>
                 </div>
             </div>

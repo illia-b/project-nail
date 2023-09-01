@@ -1,17 +1,22 @@
 'use client'
 
-import { startFight, usePlayerState } from "../../states/player-state"
+import { usePlayerState, startFight } from "../../states/player-state"
 import Button from "../../../../components/button"
-import AddEnemy from "./add-enemy"
-import EnemyList from "./enemy-list"
 
 const PreparePhase = () => {
     const {state, dispatch} = usePlayerState()
-    var preparing = state.fight.inFight && state.fight.prepare  
-    return (<>
-        {preparing && <div>
-            <AddEnemy />
-        </div>}
-    </>)
+
+    let canStart = state.fight.enemies.length > 0
+
+    const fight = () => {
+        dispatch(startFight())
+    }
+
+    return <>
+        <div>
+            <Button className="text-2xl pb-2 pt-1 rounded-lg" disabled={!canStart} onClick={fight}>Fight!</Button>
+        </div>
+    </>
 }
+
 export default PreparePhase

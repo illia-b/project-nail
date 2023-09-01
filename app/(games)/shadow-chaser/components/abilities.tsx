@@ -6,8 +6,6 @@ import Ability from "./ability"
 
 
 const Abilities = () => {
-    const {state, reducer} = usePlayerState()
-
     return (
         <>
             <Ability name={'perception'} />

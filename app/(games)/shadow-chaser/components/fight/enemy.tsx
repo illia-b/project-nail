@@ -1,13 +1,14 @@
 'use client'
 
 import { removeEnemy, usePlayerState, meleeAttack as meleeAttackAction } from "../../states/player-state"
+import EnemyBuilder from "./enemy-builder"
 import Button from "../../../../components/button"
 
 const Enemy = ({index}) => {
     const { state, dispatch } = usePlayerState()
 
     let enemy = state.fight.enemies[index]
-    let status = (<div className="flex justify-between w-48">
+    let status = (<div className="flex justify-between w-36">
         <span>💀: {enemy.health}</span>
         <span>⌛: {enemy.rounds}</span>
         <span>⚔: {enemy.damage}</span>
@@ -28,16 +29,16 @@ const Enemy = ({index}) => {
 
     return (
         <>
-            <div className="flex w-80 justify-between">
+            {!state.fight.prepare && <div className="pt-2 text-xl flex w-96 justify-between">
                 <span>{enemy.name}</span>
                 {status}
-                {state.fight.prepare && <button onClick={() => dispatch(removeEnemy(index))}>❌</button>}
-            </div>
-            {state.fight.inFight && !state.fight.prepare && <div className="flex w-full justify-between">
-                <div className="flex w-80 justify-between">
-                    <Button onClick={() => simpleAttack(index)}>1 DP Attack</Button>
-                    <Button onClick={() => strongAttack(index)}>3 DP Attack</Button>
-                    <Button onClick={() => superAttack(index)}>5 DP Attack</Button>
+            </div>}
+            {state.fight.prepare && <EnemyBuilder index={index} />}
+            {!state.fight.prepare && <div className="flex w-full justify-between">
+                <div className="flex w-96 justify-evenly">
+                    <Button onClick={() => simpleAttack(index)}>🗡 1 DP</Button>
+                    <Button onClick={() => strongAttack(index)}>🗡 3 DP</Button>
+                    <Button onClick={() => superAttack(index)}>🗡 5 DP</Button>
                 </div>
             </div>}
         </>

@@ -3,6 +3,83 @@
 import React, { createContext, useContext } from 'react';
 import { useImmerReducer } from 'use-immer';
 
+export interface Enemy {
+    name: string
+    health?: number
+    damage?: number
+    rounds?: number
+}
+
+export interface FightScenario {
+    enemies: Enemy[]
+    ranged?: boolean
+    damageTogether?: boolean
+    shadow?: boolean
+    venom?: boolean
+    reaper?: boolean
+    modificator?: (state) => void
+}
+
+const fightScenarios: {[id:number]: FightScenario} = {
+    10: { enemies: [{name: 'GUARD', rounds: 4, health: 3, damage: 2}]},
+    18: { enemies: [{name: 'OWEN THE GATEKEEPER', rounds: 5, health: 5, damage: 2}]},
+    26: { enemies: [{name: "ASH'S SHADOW", rounds: 4, health: 2, damage: 4}], shadow: true},
+    29: { enemies: [{name: 'HALF-HARLAN', rounds: 3, health: 2, damage: 1}]},
+    36: { enemies: [{name: 'HOODED FIGURE', rounds: 6, health: 5, damage: 2}]},
+    69: { enemies: [{name: 'WOAD GRIBLIN', rounds: 4, health: 4, damage: 2}]},
+    75: { enemies: [{name: 'BAT-HOUND', rounds: 4, health: 3, damage: 2}]},
+    86: { enemies: [{name: 'OLD PIRATE', rounds: 6, health: 4, damage: 2}]}, // POSSIBLE THAT FLYNT IS TAKEN (THEN ATTACK SCORE PENALTY = 1)
+    125: { enemies: [{name: 'ODAN BRITCHES', rounds: 5, health: 3, damage: 2}]},
+    129: { damageTogether: true, enemies: [
+        {name: 'FIRST GUARD', rounds: 4, health: 2, damage: 3}, 
+        {name: 'SECOND GUARD', rounds: 2, health: 2, damage: 2}, 
+        {name: 'THIRD GUARD', rounds: 3, health: 3, damage: 2}]},
+    144: { enemies: [{name: 'SHADOW REAPER', rounds: 8, health: 4, damage: 4}], reaper: true}, // SHADOW BLADE ONLY, POSSIBLE ADDITIONAL DAMAGE FROM STAFF
+    154: { enemies: [{name: 'HOODED FIGURE', rounds: 5, health: 5, damage: 2}]}, // HATCHET ONLY (ATTACK SCORE PENALTY = 1)
+    167: { ranged: true, enemies: [
+        {name: 'HOODED FIGURE'}, 
+        {name: 'CITY GUARD'}, 
+        {name: 'HOODED FIGURE'}]},
+    180: { enemies: [{name: 'KIDNAPPER', rounds: 6, health: 5, damage: 3}]},
+    192: { enemies: [{name: 'SHADOW WRAITH', rounds: 4, health: 2, damage: 4}], shadow: true},
+    198: { enemies: [
+        {name: 'FIRST MARSH GOBLIN', rounds: 4, health: 3, damage: 2},
+        {name: 'SECOND MARSH GOBLIN', rounds: 2, health: 2, damage: 2},
+        {name: 'THIRD MARSH GOBLIN', rounds: 4, health: 3, damage: 2},
+        {name: 'FOURTH MARSH GOBLIN', rounds: 2, health: 2, damage: 3},
+        {name: 'FIFTH MARSH GOBLIN', rounds: 3, health: 2, damage: 2},
+        {name: 'SIXTH MARSH GOBLIN', rounds: 3, health: 2, damage: 3},],
+        modificator: (state) => {
+            //some goblins may be captured using net
+            let captured = Number.parseInt(prompt('If you happen to capture goblins, enter their number here:', '0'))
+            state.fight.enemies.splice(6 - captured, captured)
+        }}, 
+    205: { enemies: [{name: 'GUARD', rounds: 4, health: 3, damage: 3}]},
+    224: { enemies: [{name: 'SHADOW WRAITH', rounds: 4, health: 2, damage: 4}], shadow: true},
+    236: { enemies: [{name: 'STREET URCHIN', rounds: 2, health: 3, damage: 1}]},
+    252: { enemies: [{name: 'PRISON GUARD', rounds: 4, health: 3, damage: 2}]},
+    264: { enemies: [{name: 'TEMPLE GUARD', rounds: 6, health: 5, damage: 2}]}, // Inflict double damage if score is double
+    273: { enemies: [{name: 'CITY GUARD', rounds: 6, health: 5, damage: 2}]}, // Sivler bracelet option
+    281: { enemies: [{name: 'SHADOW REAPER', rounds: 8, health: 4, damage: 4}], reaper: true}, // FLYNT ONLY, POSSIBLE ADDITIONAL DAMAGE FROM STAFF
+    302: { enemies: [{name: 'SHADOW WRAITH', rounds: 4, health: 2, damage: 4}], shadow: true},
+    328: { damageTogether: true, enemies: [
+        {name: 'FIRST GUARD', rounds: 3, health: 2, damage: 3}, 
+        {name: 'SECOND GUARD', rounds: 3, health: 3, damage: 2}]},
+    334: { enemies: [{name: 'SHADOW REAPER', rounds: 8, health: 4, damage: 4}], reaper: true}, // DUAL WIELD SHAODW BLADES + FLYNT, POSSIBLE ADDITIONAL DAMAGE FROM STAFF
+    338: { enemies: [{name: 'WOAD GRIBLIN', rounds: 4, health: 4, damage: 2}]},
+    368: { enemies: [{name: 'PUSTULA', rounds: 5, health: 5, damage: 2}], venom: true},
+    372: { enemies: [{name: 'SHADOW WRAITH', rounds: 4, health: 2, damage: 4}], shadow: true},
+    387: { enemies: [{name: 'SHADOW WRAITH', rounds: 4, health: 2, damage: 4}], shadow: true},
+    393: { ranged: true, enemies: [
+        {name: 'WINGED BEAST'}, 
+        {name: 'WINGED BEAST'}, 
+        {name: 'WINGED BEAST'}]}, // SKILL BONUS, GOLD RING DOES NOT HELP
+    426: { enemies: [{name: 'SHADOW WRAITH', rounds: 4, health: 2, damage: 4}], shadow: true},
+    429: { damageTogether: true, enemies: [
+        {name: 'FIRST GUARD', rounds: 5, health: 2, damage: 2}, 
+        {name: 'SECOND GUARD', rounds: 4, health: 3, damage: 3}]}
+}
+
 export interface Item {
     name: string
     aliases?: string[]
@@ -73,10 +150,15 @@ export interface FightState {
     inFight: boolean
     prepare: boolean
     ranged: boolean
+    damageTogether: boolean
+    venom?: boolean
+    shadow?: boolean
+    reaper?: boolean
     weapon: {
         scorePenalty: number
     },
     armor: {
+        shadowDefense: number
         defense: number
     }
 }
@@ -84,6 +166,7 @@ export interface FightState {
 const fightState: FightState = {
     enemies: [
     ],
+    damageTogether: false,
     inFight: false,
     prepare: true,
     ranged: false,
@@ -91,6 +174,7 @@ const fightState: FightState = {
         scorePenalty: 0
     },
     armor: {
+        shadowDefense: 0,
         defense: 0
     }
 }
@@ -167,6 +251,32 @@ const checkRangedFightOver = (state) => {
         state.fight.inFight = false
         state.messages.unshift('No arrows left. You lost the fight')
         state.fight.enemies.length = 0
+    }
+}
+
+const prepareCustomFight = (state) => {
+    state.fight.prepare = true
+    state.fight.inFight = true
+    state.fight.enemies.push({name: 'Enemy', health: 2, damage: 2, rounds: 2})
+}
+
+const buildFightScenario = (state, scenario: FightScenario) => {
+for (let enemy of scenario.enemies) {
+        state.fight.enemies.push({
+            name: enemy.name,
+            health: enemy.health,
+            damage: enemy.damage,
+            rounds: enemy.rounds
+        })
+    }
+    state.fight.ranged = scenario.ranged
+    state.fight.damageTogether = scenario.damageTogether
+    state.fight.shadow = scenario.shadow
+    state.fight.venom = scenario.venom
+    state.fight.reaper = scenario.reaper
+
+    if (scenario.modificator) {
+        scenario.modificator(state)
     }
 }
 
@@ -252,18 +362,24 @@ const _playerStateActions = {
         message += ` total: ${score}`
         state.messages.unshift(message)
     },
+    'PREPARE_FIGHT_SCENARIO': (state, action) => {
+        let scenario = fightScenarios[action.entryId]
+        if (!scenario) {
+            prepareCustomFight(state)
+            state.messages.unshift('Unknown entry, you need to set up manually')
+        } else {
+            state.fight.inFight = true
+            state.fight.prepare = true
+            buildFightScenario(state, scenario)
+            state.messages.unshift('Fight set up. Press START when ready')
+        }
 
-    'FIGHT_PREPARE_RANGED': (state, action) => {
-        state.fight.prepare = true
-        state.fight.inFight = true
-        state.fight.ranged = true
-        state.messages.unshift('Prepare for ranged fight')
     },
-    'FIGHT_PREPARE_MELEE': (state, action) => {
+    'PREPARE_FIGHT': (state, action) => {
         state.fight.prepare = true
         state.fight.inFight = true
-        state.fight.ranged = false
-        state.messages.unshift('Prepare for melee fight')
+        state.fight.enemies.push({name: 'Enemy', health: 2, damage: 2, rounds: 2})
+        state.messages.unshift('Set up your fight. Press START when ready')
     },
     'FIGHT_START': (state, action) => {
         state.fight.prepare = false
@@ -276,6 +392,19 @@ const _playerStateActions = {
             damage: action.damage,
             rounds: action.rounds
         })
+    },
+    'ENEMY_UPDATE': (state, action) => {
+        let enemy = state.fight.enemies[action.index]
+        enemy.name = action.name
+        if (action.health) {
+            enemy.health = action.health
+        }
+        if (action.damage) {
+            enemy.damage = action.damage
+        }
+        if (action.rounds) {
+            enemy.rounds = action.rounds
+        }
     },
     'ENEMY_REMOVE': (state, action) => {
         state.fight.enemies.splice(action.index, 1)
@@ -395,9 +524,16 @@ export const throwDice = (dice: number) => {
     }
 }
 
-export const prepareFight = (ranged = false) => {
-    return {
-        type: ranged ? 'FIGHT_PREPARE_RANGED' : 'FIGHT_PREPARE_MELEE'
+export const prepareFight = (entryId?: number) => {
+    if (entryId) {
+        return {
+            type: 'PREPARE_FIGHT_SCENARIO',
+            entryId: entryId
+        }
+    } else {
+        return {
+            type: 'PREPARE_FIGHT'
+        }
     }
 }
 
@@ -407,9 +543,20 @@ export const startFight = () => {
     }
 }
 
-export const addEnemy = (name: string, health = 2, damage = 0, rounds = 0) => {
+export const addEnemy = (name = "Enemy", health = 2, damage = 2, rounds = 2) => {
     return {
         type: 'ENEMY_ADD',
+        name: name,
+        health: health,
+        damage: damage,
+        rounds: rounds
+    }
+}
+
+export const updateEnemy = (index: number, name: string, health?: number, damage?: number, rounds?: number) => {
+    return {
+        type: 'ENEMY_UPDATE',
+        index: index,
         name: name,
         health: health,
         damage: damage,
@@ -423,7 +570,12 @@ export const removeEnemy = (index: number) => {
         index: index
     }
 }
-
+export const buildFight = (entryId: number) => {
+    return {
+        type: 'PREPARE_FIGHT_SCENARIO',
+        entryId: entryId
+    }
+}
 export const meleeAttack = (index: number, damage: number) => {
     return {
         type: 'MELEE_ATTACK',

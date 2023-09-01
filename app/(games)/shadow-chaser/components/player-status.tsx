@@ -7,9 +7,9 @@ import Inventory from './inventory';
 const PlayerStatus = () => {
     return (
         <>
-            <HealthBar />
             <Abilities />
             <Inventory />
+            <HealthBar />
         </>
     )
 }
