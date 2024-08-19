@@ -12,11 +12,9 @@ const PreparePhase = () => {
         dispatch(startFight())
     }
 
-    return <>
-        <div>
-            <Button className="text-2xl pb-2 pt-1 rounded-lg" disabled={!canStart} onClick={fight}>Fight!</Button>
-        </div>
-    </>
+    return (<div>
+        <Button className="text-2xl pb-2 pt-1 rounded-lg" disabled={!canStart} onClick={fight}>Fight!</Button>
+    </div>)
 }
 
 export default PreparePhase

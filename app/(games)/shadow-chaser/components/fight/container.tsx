@@ -10,7 +10,7 @@ const FightContainer = () => {
 
     return <>
         { !state.fight.inFight && <FightBuilder /> }
-        { state.fight.inFight && state.fight.prepare && <PreparePhase /> }
+        { false && state.fight.inFight && state.fight.prepare && <PreparePhase /> }
         { state.fight.inFight && <EnemyList />}
     </>
 }

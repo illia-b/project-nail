@@ -5,21 +5,20 @@ import { usePlayerState } from "../states/player-state";
 const Messages = () => {
     const {state, dispatch} = usePlayerState()
 
-    let topMessage = state.messages[0]
-    let prevMessage = state.messages[1]
+    const renderLogMessages = (logs: string[]) => {
+        return logs.map((log, i) => {
+            return <div key={i} className={ i === 0 ? '' : 'text-base text-gray-800' }>{log}</div>
+        })
+    }
 
     return (<>
-        {topMessage ? 
-        <div className=''>
-            {topMessage}
-            {prevMessage && <div className='text-base text-gray-500'>{prevMessage}</div>}
-        </div>
-        : 
-        <div className='text-base font-light text-gray-800'>
-            <em>
-            No messages
-            </em>
-        </div>
+        {state.messages.length
+            ? <div className='bg-blue-100 h-20 overflow-y-auto'>
+                {renderLogMessages(state.messages)}
+            </div>
+            : <div className='bg-blue-100 h-20 text-base font-light text-center text-gray-800 flex items-center justify-center'>
+                <em>No messages</em>
+            </div>
         }
     </>)
 }
