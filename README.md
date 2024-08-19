@@ -8,8 +8,5 @@ This is for that exact case.
 - Also no server for now.
 - Later, ads can be added and paid ad-free version.
 
-## NOT COVERED
-- 144,334,2,413 SHADOW REAPER FIGHT (dual wield require skill 9)
-- 198 GROUP DAMAGE SELECT
-- 368 VENOM
-- 339 FLYING ENEMY require MORE SKILL for better shots
+## Games
+- [**Shadow Chaser**](https://illia-b.github.io/project-nail/shadow-chaser)

@@ -1,7 +1,7 @@
 'use client'
 
 import Button from "../../../../components/button"
-import { usePlayerState, addEnemy } from "../../states/player-state"
+import {usePlayerState, addEnemy, endFightManual} from "../../states/player-state"
 import Enemy from "./enemy"
 
 const EnemyList = () => {
@@ -20,6 +20,9 @@ const EnemyList = () => {
             <div>
                 {enemies}
             </div>
+            {!state.fight.prepare &&
+                <Button onClick={() => dispatch(endFightManual())} >End Fight</Button>
+            }
         </>
     )
 }
